@@ -12,7 +12,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.misc.Pair;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
@@ -29,12 +28,17 @@ public class UserService {
     private final UserRepository userRepository;
 
     @Value("${jwt.secret}")
-    private final String jwtSecret;
+    private String jwtSecret;
 
     @Value("${jwt.expirationMs}")
-    private final Long jwtExpirationMs;
+    private Long jwtExpirationMs;
 
     private final Logger logger = Logger.getLogger(this.getClass().getName());
+
+    public record UserResponseWithTokenDTO(
+        String token,
+        UserResponseDTO userResponseDTO
+    ) {}
 
     public record RegisterDTO(
         @NotEmpty(message = "Name cannot be empty")
@@ -53,7 +57,7 @@ public class UserService {
      * @throws ConflictException if the email is already in use
      */
     @Transactional
-    public UserResponseDTO register(@Valid final RegisterDTO registerDTO) {
+    public UserResponseWithTokenDTO register(@Valid final RegisterDTO registerDTO) {
         logger.info("Registering user");
 
         userRepository.findByEmail(registerDTO.email()).ifPresent(user -> {
@@ -70,8 +74,13 @@ public class UserService {
 
         userRepository.save(user);
 
+        final String token = JWT.create()
+                .withSubject(user.getId().toString())
+                .withExpiresAt(new Date(System.currentTimeMillis() + jwtExpirationMs))
+                .sign(Algorithm.HMAC256(jwtSecret));
+
         logger.info("User registered successfully with id: " + user.getId());
-        return new UserResponseDTO(user.getId(), user.getName(), user.getEmail());
+        return new UserResponseWithTokenDTO(token, new UserResponseDTO(user.getId(), user.getName(), user.getEmail()));
     }
 
     public record LoginDTO(
@@ -89,7 +98,7 @@ public class UserService {
      * @throws UnauthorizedException if the email or password is invalid
      */
     @Transactional(readOnly = true)
-    public Pair<String, UserResponseDTO> login(@Valid final LoginDTO loginDTO) {
+    public UserResponseWithTokenDTO login(@Valid final LoginDTO loginDTO) {
         logger.info("Logging in user");
 
         final User user = userRepository.findByEmail(loginDTO.email())
@@ -105,7 +114,7 @@ public class UserService {
                 .sign(Algorithm.HMAC256(jwtSecret));
 
         logger.info("User logged in successfully with id: " + user.getId());
-        return new Pair<>(token, new UserResponseDTO(user.getId(), user.getName(), user.getEmail()));
+        return new UserResponseWithTokenDTO(token, new UserResponseDTO(user.getId(), user.getName(), user.getEmail()));
     }
 
     /**

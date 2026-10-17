@@ -14,7 +14,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -25,6 +24,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -64,8 +64,14 @@ class UserServiceTest {
                     "password123"
             );
             when(userRepository.findByEmail(registerDTO.email())).thenReturn(Optional.empty());
+            when(userRepository.save(any(User.class))).thenAnswer(i -> {
+                User user = i.getArgument(0);
+                user.setId(1L);
+                return user;
+            });
 
-            final UserResponseDTO responseDTO = userService.register(registerDTO);
+            final var result = userService.register(registerDTO);
+            final UserResponseDTO responseDTO = result.userResponseDTO();
 
             assertEquals("John Doe", responseDTO.name());
             assertEquals("john.doe@mail.com", responseDTO.email());
@@ -117,7 +123,7 @@ class UserServiceTest {
 
             final var result = userService.login(loginDTO);
 
-            assertEquals(user.getId(), result.b.id());
+            assertEquals(user.getId(), result.userResponseDTO().id());
         }
     }
 
