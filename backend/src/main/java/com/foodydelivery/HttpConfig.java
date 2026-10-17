@@ -2,6 +2,7 @@ package com.foodydelivery;
 
 import com.foodydelivery.middleware.AuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +21,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class HttpConfig implements WebMvcConfigurer {
     private final AuthenticationFilter authenticationFilter;
 
+    @Value("${cors.allowedOrigins}")
+    private String corsAllowedOrigins;
+
     @Bean
     public FilterRegistrationBean<AuthenticationFilter> authenticationFilterRegistration() {
         var registration = new FilterRegistrationBean<>(authenticationFilter);
@@ -29,7 +33,7 @@ public class HttpConfig implements WebMvcConfigurer {
 
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("*")
+                .allowedOrigins(corsAllowedOrigins.split(","))
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
