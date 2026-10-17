@@ -7,10 +7,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/v1/users")
@@ -35,6 +39,14 @@ public class UserController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, createJwtCookie(result.token()).toString())
                 .body(result.userResponseDTO());
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDTO> me() {
+        var authentication = Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication());
+        var userId = (Long) authentication.getPrincipal();
+        var userResponseDTO = userService.findById(userId);
+        return ResponseEntity.ok(userResponseDTO);
     }
 
     private ResponseCookie createJwtCookie(String token) {

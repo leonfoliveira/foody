@@ -152,4 +152,31 @@ class UserServiceTest {
             assertEquals(user.getId(), userId);
         }
     }
+
+    @Nested
+    class FindById {
+        @Test
+        void shouldThrowNotFoundExceptionWhenUserDoesNotExist() {
+            final Long userId = 1L;
+            when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+            assertThrows(RuntimeException.class, () -> userService.findById(userId));
+        }
+
+        @Test
+        void shouldFindUserByIdSuccessfully() {
+            final Long userId = 1L;
+            final User user = new User();
+            user.setId(userId);
+            user.setName("John Doe");
+            user.setEmail("john.doe@mail.com");
+            when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+            final UserResponseDTO responseDTO = userService.findById(userId);
+
+            assertEquals(user.getId(), responseDTO.id());
+            assertEquals(user.getName(), responseDTO.name());
+            assertEquals(user.getEmail(), responseDTO.email());
+        }
+    }
 }

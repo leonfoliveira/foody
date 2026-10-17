@@ -5,6 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.foodydelivery.dto.response.UserResponseDTO;
 import com.foodydelivery.entities.User;
 import com.foodydelivery.exception.ConflictException;
+import com.foodydelivery.exception.NotFoundException;
 import com.foodydelivery.exception.UnauthorizedException;
 import com.foodydelivery.repositories.UserRepository;
 import jakarta.validation.Valid;
@@ -133,5 +134,19 @@ public class UserService {
         } catch (Exception e) {
             throw new UnauthorizedException("Invalid or expired token");
         }
+    }
+
+    /**
+     * Finds a user by their ID.
+     *
+     * @param userId the ID of the user to find
+     * @return a UserResponseDTO containing the user's information
+     * @throws NotFoundException if the user is not found
+     */
+    public UserResponseDTO findById(final Long userId) {
+        logger.info("Finding user by id: " + userId);
+        final User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        return new UserResponseDTO(user.getId(), user.getName(), user.getEmail());
     }
 }
