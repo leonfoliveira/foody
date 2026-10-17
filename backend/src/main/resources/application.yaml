@@ -9,3 +9,6 @@ spring:
       hibernate:
         ddl-auto: create-drop
         dialect: org.hibernate.community.dialect.SQLiteDialect
+jwt:
+  secret: ${JWT_SECRET:secret}
+  expirationMs: ${JWT_EXPIRATION_MS:3600000}
