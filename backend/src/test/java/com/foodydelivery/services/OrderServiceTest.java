@@ -37,8 +37,7 @@ class OrderServiceTest {
             OrderService.CreateDTO createDTO = new OrderService.CreateDTO(
                     "John Doe",
                     "Pizza",
-                    "Main St",
-                    Order.Status.RECEBIDO
+                    "Main St"
             );
 
             Order savedOrder = Order.builder()
@@ -143,11 +142,11 @@ class OrderServiceTest {
 
             when(orderRepository.findAll()).thenReturn(List.of(order));
 
-            OrderResponseDTO response = orderService.findAll();
+            List<OrderResponseDTO> response = orderService.findAll();
 
             assertNotNull(response);
-            assertEquals(1L, response.id());
-            assertEquals("John Doe", response.customer());
+            assertEquals(1L, response.getFirst().id());
+            assertEquals("John Doe", response.getFirst().customer());
             verify(orderRepository).findAll();
         }
 

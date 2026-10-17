@@ -10,6 +10,8 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -52,7 +54,7 @@ class OrderControllerTest {
     @Test
     void shouldFindAllOrders() throws Exception {
         when(orderService.findAll())
-                .thenReturn(new OrderResponseDTO(1L, "John Doe", "Pizza, Coke", "123 Main St", Order.Status.RECEBIDO));
+                .thenReturn(List.of(new OrderResponseDTO(1L, "John Doe", "Pizza, Coke", "123 Main St", Order.Status.RECEBIDO)));
 
         mockMvc.perform(get("/v1/orders"))
                 .andExpect(status().isOk());

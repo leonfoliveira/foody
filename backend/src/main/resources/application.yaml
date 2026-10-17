@@ -1,13 +1,14 @@
 spring:
   datasource:
     driver-class-name: org.sqlite.JDBC
-    url: ${DB_URL:jdbc:sqlite::memory:}
+    url: ${DB_URL:jdbc:sqlite:foody.db}
     username: ${DB_USER:foody}
     password: ${DB_PASSWORD:foody}
   jpa:
+    hibernate:
+      ddl-auto: create
     properties:
       hibernate:
-        ddl-auto: create-drop
         dialect: org.hibernate.community.dialect.SQLiteDialect
 jwt:
   secret: ${JWT_SECRET:secret}

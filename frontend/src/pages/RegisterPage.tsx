@@ -1,11 +1,10 @@
 import axios from "axios";
+import { API_URL } from "../config";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { useContext, useState } from "react";
 import AuthenticationContext from "../contexts/AuthenticationContext";
-import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
-import Snackbar from "@mui/material/Snackbar";
+import { Button, TextField, Snackbar } from "@mui/material";
 
 export default function RegisterPage() {
   const form = useForm<{ name: string; email: string; password: string }>();
@@ -23,7 +22,9 @@ export default function RegisterPage() {
   }) {
     try {
       setIsRegistering(true);
-      const result = await axios.post("/v1/users/register", data);
+      const result = await axios.post(`${API_URL}/v1/users/register`, data, {
+        withCredentials: true,
+      });
       setLoggedInUser(result.data);
       navigate("/");
     } catch {
@@ -36,21 +37,24 @@ export default function RegisterPage() {
   }
 
   return (
-    <div>
-      <div>
-        <h1>Registrar</h1>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
+        <h1 className="text-2xl font-bold mb-4">Registrar</h1>
         <form onSubmit={form.handleSubmit(register)}>
-          <div>
+          <div className="mb-4">
             <TextField
               type="text"
               label="Nome"
               {...form.register("name")}
+              required
               disabled={isRegistering}
               error={!!form.formState.errors.name}
               helperText={form.formState.errors.name?.message}
+              fullWidth
+              data-testid="name"
             />
           </div>
-          <div>
+          <div className="mb-4">
             <TextField
               type="email"
               label="E-mail"
@@ -59,9 +63,11 @@ export default function RegisterPage() {
               disabled={isRegistering}
               error={!!form.formState.errors.email}
               helperText={form.formState.errors.email?.message}
+              fullWidth
+              data-testid="email"
             />
           </div>
-          <div>
+          <div className="mb-4">
             <TextField
               type="password"
               label="Senha"
@@ -70,13 +76,23 @@ export default function RegisterPage() {
               disabled={isRegistering}
               error={!!form.formState.errors.password}
               helperText={form.formState.errors.password?.message}
+              fullWidth
+              data-testid="password"
             />
           </div>
-          <Button type="submit" disabled={isRegistering}>
+          <Button
+            type="submit"
+            disabled={isRegistering}
+            fullWidth
+            variant="contained"
+          >
             Registrar
           </Button>
-          <p>
-            Já tem uma conta? <Link to="/login">Entrar</Link>
+          <p className="mt-4 text-center">
+            Já tem uma conta?{" "}
+            <Link to="/login" className="text-blue-500">
+              Entrar
+            </Link>
           </p>
 
           <Snackbar
@@ -84,6 +100,7 @@ export default function RegisterPage() {
             autoHideDuration={6000}
             onClose={() => setRegistrationError(null)}
             message={registrationError}
+            data-testid="registration-error"
           />
         </form>
       </div>

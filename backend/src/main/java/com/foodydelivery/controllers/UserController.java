@@ -41,6 +41,18 @@ public class UserController {
                 .body(result.userResponseDTO());
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout() {
+        var cookie = ResponseCookie.from("jwt", "")
+                .httpOnly(true)
+                .path("/")
+                .maxAge(0)
+                .build();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .build();
+    }
+
     @GetMapping("/me")
     public ResponseEntity<UserResponseDTO> me() {
         var authentication = Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication());

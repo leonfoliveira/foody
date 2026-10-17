@@ -1,11 +1,9 @@
 import axios from "axios";
+import { API_URL } from "../config";
 import { useForm } from "react-hook-form";
-import { useContext, useEffect, useState } from "react";
-import AuthenticationContext from "../contexts/AuthenticationContext";
+import { useEffect, useState } from "react";
 import type { OrderModel } from "../models/OrderModel";
-import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
-import { Snackbar } from "@mui/material";
+import { Button, TextField, Card, Divider, Snackbar } from "@mui/material";
 
 const ORDER_STATUS_TRANSITIONS: Record<string, string[]> = {
   RECEBIDO: ["EM_PREPARO", "CANCELADO"],
@@ -21,7 +19,6 @@ export default function OrdersPage() {
     items: string;
     address: string;
   }>();
-  const { loggedInUser } = useContext(AuthenticationContext);
   const [orders, setOrders] = useState<OrderModel[]>([]);
   const [isFetchingOrdersLoading, setIsFetchingOrdersLoading] = useState(false);
   const [isCreatingOrderLoading, setIsCreatingOrderLoading] = useState(false);
@@ -31,7 +28,9 @@ export default function OrdersPage() {
   async function fetchOrders() {
     setIsFetchingOrdersLoading(true);
     try {
-      const response = await axios.get("/v1/orders");
+      const response = await axios.get(`${API_URL}/v1/orders`, {
+        withCredentials: true,
+      });
       setOrders(response.data);
     } catch {
       setError("Failed to fetch orders.");
@@ -47,7 +46,9 @@ export default function OrdersPage() {
   }) {
     setIsCreatingOrderLoading(true);
     try {
-      const response = await axios.post("/v1/orders", data);
+      const response = await axios.post(`${API_URL}/v1/orders`, data, {
+        withCredentials: true,
+      });
       setOrders((prevOrders) => [...prevOrders, response.data]);
     } catch {
       setError("Failed to create order.");
@@ -56,10 +57,19 @@ export default function OrdersPage() {
     }
   }
 
-  async function updateOrderStatus(orderId: string, status: string) {
+  async function updateOrderStatus(orderId: string, newStatus: string) {
     setIsUpdatingOrderLoading(true);
     try {
-      const response = await axios.patch(`/v1/orders/${orderId}`, { status });
+      const response = await axios.patch(
+        `${API_URL}/v1/orders/${orderId}/status`,
+        {},
+        {
+          withCredentials: true,
+          params: {
+            newStatus,
+          },
+        },
+      );
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
           order.id === orderId ? response.data : order,
@@ -77,14 +87,14 @@ export default function OrdersPage() {
   }, []);
 
   return (
-    <div>
-      <p>Olá, {loggedInUser?.name}</p>
-      <h1>Pedidos</h1>
-
-      <div>
-        Novo Pedido
-        <form onSubmit={form.handleSubmit(createOrder)}>
-          <div>
+    <div className="flex flex-col items-center pt-8 min-h-screen bg-gray-100">
+      <div className="mb-8 w-full max-w-md">
+        <h2 className="text-xl font-bold mb-4">Novo Pedido</h2>
+        <form
+          onSubmit={form.handleSubmit(createOrder)}
+          className="w-full max-w-md"
+        >
+          <div className="mb-4">
             <TextField
               label="Cliente"
               type="text"
@@ -92,9 +102,11 @@ export default function OrdersPage() {
               disabled={isCreatingOrderLoading}
               error={!!form.formState.errors.customer}
               helperText={form.formState.errors.customer?.message}
+              fullWidth
+              data-testid="customer"
             />
           </div>
-          <div>
+          <div className="mb-4">
             <TextField
               label="Items"
               type="text"
@@ -102,9 +114,11 @@ export default function OrdersPage() {
               disabled={isCreatingOrderLoading}
               error={!!form.formState.errors.items}
               helperText={form.formState.errors.items?.message}
+              fullWidth
+              data-testid="items"
             />
           </div>
-          <div>
+          <div className="mb-4">
             <TextField
               label="Endereço"
               type="text"
@@ -112,36 +126,102 @@ export default function OrdersPage() {
               disabled={isCreatingOrderLoading}
               error={!!form.formState.errors.address}
               helperText={form.formState.errors.address?.message}
+              fullWidth
+              data-testid="address"
             />
           </div>
-          <Button type="submit" variant="contained">
+          <Button
+            type="submit"
+            variant="contained"
+            className="mt-4"
+            fullWidth
+            data-testid="create-order-button"
+          >
             Criar Pedido
           </Button>
         </form>
       </div>
 
+      <Divider className="my-8 w-full"></Divider>
+
+      <h1 className="mt-4 text-2xl font-bold mb-4">Pedidos</h1>
+
       <div>
+        {!isFetchingOrdersLoading && orders.length === 0 && (
+          <p data-testid="no-orders-found">No orders found.</p>
+        )}
         {isFetchingOrdersLoading ? (
-          <p>Loading orders...</p>
+          <p data-testid="loading-orders">Loading orders...</p>
         ) : (
           <>
             {orders.map((order) => (
               <div key={order.id}>
-                <p>ID: {order.id}</p>
-                <p>Cliente: {order.customer}</p>
-                <p>Items: {order.items}</p>
-                <p>Endereço: {order.address}</p>
-                <p>Status: {order.status}</p>
+                <Card className="mb-4 p-4" data-testid={`order-${order.id}`}>
+                  <p>
+                    <span
+                      className="font-bold"
+                      data-testid={`order-${order.id}-id`}
+                    >
+                      ID:
+                    </span>{" "}
+                    {order.id}
+                  </p>
+                  <p>
+                    <span
+                      className="font-bold"
+                      data-testid={`order-${order.id}-customer`}
+                    >
+                      Cliente:
+                    </span>{" "}
+                    {order.customer}
+                  </p>
+                  <p>
+                    <span
+                      className="font-bold"
+                      data-testid={`order-${order.id}-items`}
+                    >
+                      Items:
+                    </span>{" "}
+                    {order.items}
+                  </p>
+                  <p>
+                    <span
+                      className="font-bold"
+                      data-testid={`order-${order.id}-address`}
+                    >
+                      Endereço:
+                    </span>{" "}
+                    {order.address}
+                  </p>
+                  <p>
+                    <span
+                      className="font-bold"
+                      data-testid={`order-${order.id}-status`}
+                    >
+                      Status:
+                    </span>{" "}
+                    {order.status}
+                  </p>
 
-                {ORDER_STATUS_TRANSITIONS[order.status].map((nextStatus) => (
-                  <Button
-                    key={nextStatus}
-                    onClick={() => updateOrderStatus(order.id, nextStatus)}
-                    disabled={isUpdatingOrderLoading}
-                  >
-                    Mover para {nextStatus}
-                  </Button>
-                ))}
+                  {ORDER_STATUS_TRANSITIONS[order.status].length > 0 && (
+                    <div className="flex gap-2 justify-between mt-4">
+                      {ORDER_STATUS_TRANSITIONS[order.status].map(
+                        (newStatus) => (
+                          <Button
+                            key={newStatus}
+                            onClick={() =>
+                              updateOrderStatus(order.id, newStatus)
+                            }
+                            disabled={isUpdatingOrderLoading}
+                            data-testid={`order-${order.id}-move-to-${newStatus}`}
+                          >
+                            Mover para {newStatus}
+                          </Button>
+                        ),
+                      )}
+                    </div>
+                  )}
+                </Card>
               </div>
             ))}
           </>
@@ -153,6 +233,7 @@ export default function OrdersPage() {
         autoHideDuration={6000}
         onClose={() => setError("")}
         message={error}
+        data-testid="orders-error"
       />
     </div>
   );

@@ -1,6 +1,7 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import type { UserModel } from "../models/UserModel";
+import { API_URL } from "../config";
 
 const AuthenticationContext = React.createContext<{
   loggedInUser?: UserModel;
@@ -23,7 +24,9 @@ export function AuthenticationProvider({
 
   async function fetchUserDetails() {
     try {
-      const result = await axios.get("/v1/users/me");
+      const result = await axios.get(`${API_URL}/v1/users/me`, {
+        withCredentials: true,
+      });
       setLoggedInUser(result.data);
     } catch {
       setLoggedInUser(undefined);

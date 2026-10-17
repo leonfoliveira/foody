@@ -54,6 +54,14 @@ class UserControllerTest {
     }
 
     @Test
+    void shouldLogoutUser() throws Exception {
+        mockMvc.perform(post("/v1/users/logout")
+                        .contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(cookie().maxAge("jwt", 0));
+    }
+
+    @Test
     void shouldReturnUserDetails() throws Exception {
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(1L, null));
         when(userService.findById(1L))

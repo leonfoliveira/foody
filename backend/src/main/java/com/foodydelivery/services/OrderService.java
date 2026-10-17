@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,8 +36,7 @@ public class OrderService {
             @NotEmpty
             String items,
             @NotEmpty
-            String address,
-            Order.Status status
+            String address
     ) {}
 
     @Transactional
@@ -45,7 +45,7 @@ public class OrderService {
                 .customer(createDTO.customer())
                 .items(createDTO.items())
                 .address(createDTO.address())
-                .status(createDTO.status())
+                .status(Order.Status.RECEBIDO)
                 .build();
 
         Order savedOrder = orderRepository.save(order);
@@ -80,7 +80,7 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public OrderResponseDTO findAll() {
+    public List<OrderResponseDTO> findAll() {
         return orderRepository.findAll().stream()
             .map(order -> new OrderResponseDTO(
                 order.getId(),
@@ -88,9 +88,7 @@ public class OrderService {
                 order.getItems(),
                 order.getAddress(),
                 order.getStatus()
-            ))
-            .findFirst()
-            .orElseThrow(() -> new NotFoundException("No orders found"));
+            )).toList();
     }
 
     @Transactional(readOnly = true)
